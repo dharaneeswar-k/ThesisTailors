@@ -1,4 +1,3 @@
-
 const menuToggle = document.querySelector('.menu-toggle');
 const navLinks = document.querySelector('.nav-links');
 
@@ -53,10 +52,16 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         e.preventDefault();
         
         const targetId = this.getAttribute('href');
+        if(targetId === '#') return;
+        
         const targetElement = document.querySelector(targetId);
+        if(!targetElement) return;
+        
+        const headerHeight = document.querySelector('header').offsetHeight;
+        const offsetPosition = targetElement.offsetTop - headerHeight;
         
         window.scrollTo({
-            top: targetElement.offsetTop - 80,
+            top: offsetPosition,
             behavior: 'smooth'
         });
     });
@@ -65,10 +70,10 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 // Animation on scroll
 const animateOnScroll = () => {
     const animatedElements = document.querySelectorAll('.service-card, .feature-item, .process-step, .contact-item');
+    const screenPosition = window.innerHeight * 0.85;
     
     animatedElements.forEach(element => {
         const elementPosition = element.getBoundingClientRect().top;
-        const screenPosition = window.innerHeight * 0.85;
         
         if (elementPosition < screenPosition) {
             element.style.animationPlayState = 'running';
@@ -76,9 +81,31 @@ const animateOnScroll = () => {
     });
 };
 
+// Throttle function for scroll events
+function throttle(func, limit) {
+    let lastFunc;
+    let lastRan;
+    return function() {
+        const context = this;
+        const args = arguments;
+        if (!lastRan) {
+            func.apply(context, args);
+            lastRan = Date.now();
+        } else {
+            clearTimeout(lastFunc);
+            lastFunc = setTimeout(function() {
+                if ((Date.now() - lastRan) >= limit) {
+                    func.apply(context, args);
+                    lastRan = Date.now();
+                }
+            }, limit - (Date.now() - lastRan));
+        }
+    }
+}
+
 // Floating button visibility
 const floatingBtn = document.querySelector('.floating-call');
-window.addEventListener('scroll', () => {
+window.addEventListener('scroll', throttle(() => {
     if (window.scrollY > 400) {
         floatingBtn.classList.add('visible');
     } else {
@@ -87,9 +114,51 @@ window.addEventListener('scroll', () => {
     
     // Trigger animations
     animateOnScroll();
-});
+}, 100));
 
 // Initialize animations on load
 window.addEventListener('load', () => {
     animateOnScroll();
 });
+// Add smooth scrolling for new About link
+document.querySelectorAll('.nav-links a[href="#about"], .footer-links a[href="#about"]').forEach(anchor => {
+    anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        const targetElement = document.querySelector('#about');
+        if(!targetElement) return;
+        
+        const headerHeight = document.querySelector('header').offsetHeight;
+        const offsetPosition = targetElement.offsetTop - headerHeight;
+        
+        window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth'
+        });
+    });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    const mobileBtn = document.querySelector('.mobile-menu-btn');
+    const navLinks = document.querySelector('.nav-links');
+    
+    mobileBtn.addEventListener('click', function() {
+        navLinks.classList.toggle('active');
+        // Change icon based on state
+        if (navLinks.classList.contains('active')) {
+            mobileBtn.textContent = '✕';
+        } else {
+            mobileBtn.textContent = '☰';
+        }
+    });
+    
+    // Close menu when clicking on a link
+    document.querySelectorAll('.nav-links a').forEach(link => {
+        link.addEventListener('click', () => {
+            navLinks.classList.remove('active');
+            mobileBtn.textContent = '☰';
+        });
+    });
+});
+
+
